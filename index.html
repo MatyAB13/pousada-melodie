@@ -26,6 +26,7 @@
     <nav>
         <button id="btn-rooms" class="nav-btn active">Habitaciones</button>
         <button id="btn-calendar" class="nav-btn">Calendario</button>
+        <button id="btn-reservation" class="nav-btn">Reserva</button>
         <button id="theme-toggle" class="nav-btn theme-toggle" aria-label="Activar modo oscuro">🌙 Modo oscuro</button>
     </nav>
 
@@ -36,7 +37,11 @@
         <input type="date" id="status-date">
         <div id="rooms-grid" class="grid"></div>
         
-        <!-- Formulario de Reserva -->
+    </section>
+
+    <!-- Sección Reserva -->
+    <section id="reservation-section" class="section hidden">
+        <h2>Reserva</h2>
         <div id="reservation-form" class="form-container">
             <h3>Registrar Reserva</h3>
             <form id="reserve-form">

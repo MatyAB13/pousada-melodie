@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navegación
     document.getElementById('btn-rooms').addEventListener('click', () => showSection('rooms-section'));
     document.getElementById('btn-calendar').addEventListener('click', () => showSection('calendar-section'));
+    document.getElementById('btn-reservation').addEventListener('click', () => showSection('reservation-section'));
 
     // Formulario
     reserveForm.addEventListener('submit', handleReservation);
