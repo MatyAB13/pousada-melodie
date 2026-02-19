@@ -38,7 +38,9 @@
         <div id="reservation-form" class="form-container">
             <h3>Registrar Reserva</h3>
             <form id="reserve-form">
-                <select id="room-select" required>
+                <div id="room-buttons" class="room-selector" aria-label="Seleccionar habitación"></div>
+                <p id="selected-room-label" class="selected-room-label">Habitación seleccionada: ninguna</p>
+                <select id="room-select" required class="hidden-room-select" aria-hidden="true" tabindex="-1">
                     <option value="">Seleccionar Habitación</option>
                 </select>
                 <input type="date" id="checkin-date" required>

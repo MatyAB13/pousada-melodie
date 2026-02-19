@@ -259,6 +259,38 @@ form {
     gap: 10px;
 }
 
+.hidden-room-select {
+    display: none;
+}
+
+.room-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.room-select-btn {
+    border: 1px solid var(--calendar-border);
+    background: var(--surface-bg);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.room-select-btn.active {
+    background: var(--btn-secondary-bg);
+    color: #fff;
+    border-color: transparent;
+}
+
+.selected-room-label {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
 input, select {
     padding: 10px;
     border: 1px solid var(--border-color);
@@ -468,4 +500,18 @@ input, select {
 /* Pista visual del estado del modo oscuro */
 body.dark-mode #theme-toggle {
     box-shadow: 0 0 0 2px rgba(182, 139, 252, 0.45);
+}
+
+
+#rooms-section .grid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+#rooms-section .room-card {
+    padding: 10px;
+}
+
+#rooms-section .room-card.selected-room-card {
+    outline: 2px solid var(--btn-secondary-bg);
+    transform: translateY(-2px);
 }

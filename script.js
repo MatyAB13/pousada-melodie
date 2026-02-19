@@ -27,6 +27,8 @@ let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
 // Elementos DOM
 const roomsGrid = document.getElementById('rooms-grid');
 const roomSelect = document.getElementById('room-select');
+const roomButtons = document.getElementById('room-buttons');
+const selectedRoomLabel = document.getElementById('selected-room-label');
 const reserveForm = document.getElementById('reserve-form');
 const calendarGrid = document.getElementById('calendar-grid');
 const monthYear = document.getElementById('month-year');
@@ -96,6 +98,7 @@ function loadRooms() {
         const reservation = reservations.find(r => r.roomId === room.id && isOccupied(r));
         const card = document.createElement('div');
         card.className = `room-card ${reservation ? 'occupied' : 'free'}`;
+        card.dataset.roomId = room.id;
         card.innerHTML = `
             <h3>${room.name}</h3>
             <p><strong>Tipo:</strong> ${room.type}</p>
@@ -114,6 +117,10 @@ function loadRooms() {
                 <button class="btn-danger" onclick="deleteReservation(${reservation.id})">Eliminar Reserva</button>
             ` : ''}
         `;
+        card.addEventListener('click', (event) => {
+            if (event.target.closest('button')) return;
+            setSelectedRoom(room.id);
+        });
         roomsGrid.appendChild(card);
     });
 }
@@ -121,18 +128,48 @@ function loadRooms() {
 // Poblar select de habitaciones
 function populateRoomSelect() {
     roomSelect.innerHTML = '<option value="">Seleccionar Habitación</option>';
+    roomButtons.innerHTML = '';
+
     rooms.forEach(room => {
         const option = document.createElement('option');
         option.value = room.id;
         option.textContent = room.name;
         roomSelect.appendChild(option);
+
+        const roomBtn = document.createElement('button');
+        roomBtn.type = 'button';
+        roomBtn.className = 'room-select-btn';
+        roomBtn.dataset.roomId = room.id;
+        roomBtn.textContent = room.name;
+        roomBtn.addEventListener('click', () => setSelectedRoom(room.id));
+        roomButtons.appendChild(roomBtn);
     });
+
+    setSelectedRoom(selectedRoomId || rooms[0]?.id || null);
+}
+
+function setSelectedRoom(roomId) {
+    selectedRoomId = roomId ? Number(roomId) : null;
+    roomSelect.value = selectedRoomId ? String(selectedRoomId) : '';
+
+    document.querySelectorAll('.room-select-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.roomId) === selectedRoomId);
+    });
+
+    document.querySelectorAll('.room-card').forEach(card => {
+        card.classList.toggle('selected-room-card', Number(card.dataset.roomId) === selectedRoomId);
+    });
+
+    const selectedRoom = rooms.find(r => r.id === selectedRoomId);
+    selectedRoomLabel.textContent = selectedRoom
+        ? `Habitación seleccionada: ${selectedRoom.name}`
+        : 'Habitación seleccionada: ninguna';
 }
 
 // Manejar reserva
 function handleReservation(e) {
     e.preventDefault();
-    const roomId = parseInt(roomSelect.value, 10);
+    const roomId = selectedRoomId || parseInt(roomSelect.value, 10);
     const checkin = document.getElementById('checkin-date').value;
     const checkout = document.getElementById('checkout-date').value;
     const guest = document.getElementById('guest-name').value;
@@ -145,6 +182,11 @@ function handleReservation(e) {
     const checkoutTime = document.getElementById('checkout-time').value;
     const paidAmount = parseFloat(document.getElementById('paid-amount').value || 0);
     const pendingAmount = parseFloat(document.getElementById('pending-amount').value || 0);
+
+    if (!roomId) {
+        alert('Seleccioná una habitación para reservar.');
+        return;
+    }
 
     if (new Date(checkin) >= new Date(checkout)) {
         alert('Fecha de salida debe ser posterior a entrada.');
@@ -171,6 +213,7 @@ function handleReservation(e) {
 
     saveReservations();
     loadRooms();
+    setSelectedRoom(roomId);
     reserveForm.reset();
     renderCalendar();
     if (selectedDate) {
@@ -183,6 +226,7 @@ function freeRoom(roomId) {
     reservations = reservations.filter(r => !(r.roomId === roomId && isOccupied(r)));
     saveReservations();
     loadRooms();
+    setSelectedRoom(selectedRoomId);
     renderCalendar();
     if (selectedDate) {
         selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
@@ -194,6 +238,7 @@ function deleteReservation(id) {
     reservations = reservations.filter(r => r.id !== id);
     saveReservations();
     loadRooms();
+    setSelectedRoom(selectedRoomId);
     renderCalendar();
     if (selectedDate) {
         selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
@@ -216,6 +261,7 @@ function saveReservations() {
 // Calendario
 let currentDate = new Date();
 let selectedDate = null;
+let selectedRoomId = null;
 
 function initCalendar() {
     selectedDate = new Date().toISOString().split('T')[0];
