@@ -94,33 +94,26 @@ function showSection(sectionId) {
 // Cargar habitaciones en grid
 function loadRooms() {
     roomsGrid.innerHTML = '';
+    const todayStr = new Date().toISOString().split('T')[0];
+
     rooms.forEach(room => {
-        const reservation = reservations.find(r => r.roomId === room.id && isOccupied(r));
+        const occupiedToday = reservations.some(r => {
+            if (r.roomId !== room.id) return false;
+            const checkin = new Date(r.checkin);
+            const checkout = new Date(r.checkout);
+            const today = new Date(todayStr);
+            return today >= checkin && today <= checkout;
+        });
+
         const card = document.createElement('div');
-        card.className = `room-card ${reservation ? 'occupied' : 'free'}`;
+        card.className = `room-card ${occupiedToday ? 'occupied' : 'free'}`;
         card.dataset.roomId = room.id;
         card.innerHTML = `
             <h3>${room.name}</h3>
-            <p><strong>Tipo:</strong> ${room.type}</p>
-            <p><strong>Estado:</strong> ${reservation ? 'Ocupada' : 'Libre'}</p>
-            ${reservation ? `
-                <p><strong>Entrada:</strong> ${reservation.checkin}</p>
-                <p><strong>Salida:</strong> ${reservation.checkout}</p>
-                <p><strong>Huésped:</strong> ${reservation.guest}</p>
-                <p><strong>Personas:</strong> ${reservation.guestCount || 0}</p>
-                <p><strong>Autos:</strong> ${reservation.carCount || 0} (${reservation.carPlates || 'sin patente'})</p>
-                <p><strong>Pago:</strong> ${reservation.paymentStatus || 'Sin estado'}</p>
-                <p><strong>Días extra:</strong> ${reservation.extraDays || 0}</p>
-                <p><strong>Horario:</strong> ${reservation.checkinTime || '--:--'} - ${reservation.checkoutTime || '--:--'}</p>
-                <p><strong>Pagado:</strong> $${reservation.paidAmount || 0} | <strong>Falta:</strong> $${reservation.pendingAmount || 0}</p>
-                <button class="btn-danger" onclick="freeRoom(${room.id})">Liberar</button>
-                <button class="btn-danger" onclick="deleteReservation(${reservation.id})">Eliminar Reserva</button>
-            ` : ''}
+            <p><strong>Estado hoy (${todayStr}):</strong> ${occupiedToday ? 'Ocupada' : 'Libre'}</p>
         `;
-        card.addEventListener('click', (event) => {
-            if (event.target.closest('button')) return;
-            setSelectedRoom(room.id);
-        });
+
+        card.addEventListener('click', () => setSelectedRoom(room.id));
         roomsGrid.appendChild(card);
     });
 }
