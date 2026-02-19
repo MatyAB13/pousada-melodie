@@ -66,8 +66,16 @@
                 <input type="time" id="checkin-time" required>
                 <label for="checkout-time">Hora de salida</label>
                 <input type="time" id="checkout-time" required>
-                <input type="number" id="paid-amount" min="0" step="0.01" placeholder="Cuánto dinero pagó de entrada" value="0">
-                <input type="number" id="pending-amount" min="0" step="0.01" placeholder="Cuánto falta pagar" value="0">
+                <label for="paid-amount">Pago de entrada</label>
+                <div class="money-field">
+                    <span>$</span>
+                    <input type="number" id="paid-amount" class="money-input" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="0">
+                </div>
+                <label for="pending-amount">Falta pagar</label>
+                <div class="money-field">
+                    <span>$</span>
+                    <input type="number" id="pending-amount" class="money-input" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="0">
+                </div>
                 <button type="submit" class="btn-primary">Reservar</button>
             </form>
         </div>

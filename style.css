@@ -521,3 +521,32 @@ body.dark-mode #theme-toggle {
     max-width: 220px;
     margin: 4px 0 12px;
 }
+
+
+.money-field {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--input-bg);
+    overflow: hidden;
+}
+
+.money-field span {
+    padding: 8px 10px;
+    border-right: 1px solid var(--border-color);
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+.money-input {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+}
+
+.money-input:focus {
+    outline: none;
+}
