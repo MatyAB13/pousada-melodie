@@ -29,6 +29,7 @@ const roomsGrid = document.getElementById('rooms-grid');
 const roomSelect = document.getElementById('room-select');
 const roomButtons = document.getElementById('room-buttons');
 const selectedRoomLabel = document.getElementById('selected-room-label');
+const statusDateInput = document.getElementById('status-date');
 const reserveForm = document.getElementById('reserve-form');
 const calendarGrid = document.getElementById('calendar-grid');
 const monthYear = document.getElementById('month-year');
@@ -38,6 +39,7 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
+    statusDateInput.value = new Date().toISOString().split('T')[0];
     loadRooms();
     populateRoomSelect();
     initCalendar();
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Formulario
     reserveForm.addEventListener('submit', handleReservation);
+    statusDateInput.addEventListener('change', loadRooms);
 
     // Calendario
     document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
@@ -94,15 +97,15 @@ function showSection(sectionId) {
 // Cargar habitaciones en grid
 function loadRooms() {
     roomsGrid.innerHTML = '';
-    const todayStr = new Date().toISOString().split('T')[0];
+    const referenceDate = statusDateInput.value || new Date().toISOString().split('T')[0];
 
     rooms.forEach(room => {
         const occupiedToday = reservations.some(r => {
             if (r.roomId !== room.id) return false;
             const checkin = new Date(r.checkin);
             const checkout = new Date(r.checkout);
-            const today = new Date(todayStr);
-            return today >= checkin && today <= checkout;
+            const selected = new Date(referenceDate);
+            return selected >= checkin && selected <= checkout;
         });
 
         const card = document.createElement('div');
@@ -110,7 +113,7 @@ function loadRooms() {
         card.dataset.roomId = room.id;
         card.innerHTML = `
             <h3>${room.name}</h3>
-            <p><strong>Estado hoy (${todayStr}):</strong> ${occupiedToday ? 'Ocupada' : 'Libre'}</p>
+            <p><strong>Estado (${referenceDate}):</strong> ${occupiedToday ? 'Ocupada' : 'Libre'}</p>
         `;
 
         card.addEventListener('click', () => setSelectedRoom(room.id));

@@ -515,3 +515,9 @@ body.dark-mode #theme-toggle {
     outline: 2px solid var(--btn-secondary-bg);
     transform: translateY(-2px);
 }
+
+
+#rooms-section #status-date {
+    max-width: 220px;
+    margin: 4px 0 12px;
+}
