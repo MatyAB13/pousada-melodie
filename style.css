@@ -1,11 +1,65 @@
-/* Colores Tropicales: Azul Mar (#007BFF), Verde Agua (#00CED1), Blanco (#FFFFFF) */
+/* Tema claro por defecto */
+:root {
+    --bg-main: #f0f8ff;
+    --text-main: #333;
+    --hero-overlay: rgba(0, 123, 255, 0.7);
+    --slider-btn-bg: rgba(0, 206, 209, 0.8);
+    --nav-bg: #007BFF;
+    --nav-btn-bg: #00CED1;
+    --nav-btn-active: #0056b3;
+    --card-bg: #ffffff;
+    --surface-bg: #ffffff;
+    --border-color: #ccc;
+    --calendar-border: #ddd;
+    --btn-primary-bg: #007BFF;
+    --btn-primary-hover: #0056b3;
+    --btn-secondary-bg: #00CED1;
+    --btn-secondary-hover: #0097a7;
+    --today-bg: #00CED1;
+    --selected-bg: #007BFF;
+    --input-bg: #ffffff;
+    --occupied-soft: #ffd9d9;
+    --chip-text: #8b0000;
+}
+
+
+/* Modo oscuro (sistema solicitado):
+   Primary 200: #B68BFC
+   Primary Variant 700: #3700B3
+   Secondary 200: #03DAC6
+*/
+body.dark-mode {
+    --bg-main: #121212;
+    --text-main: #f1f1f1;
+    --hero-overlay: rgba(55, 0, 179, 0.72);
+    --slider-btn-bg: rgba(3, 218, 198, 0.85);
+    --nav-bg: #3700B3;
+    --nav-btn-bg: #03DAC6;
+    --nav-btn-active: #B68BFC;
+    --card-bg: #1e1e1e;
+    --surface-bg: #1e1e1e;
+    --border-color: #454545;
+    --calendar-border: #444;
+    --btn-primary-bg: #B68BFC;
+    --btn-primary-hover: #9f6cf7;
+    --btn-secondary-bg: #03DAC6;
+    --btn-secondary-hover: #02b6a6;
+    --today-bg: #03DAC6;
+    --selected-bg: #B68BFC;
+    --input-bg: #2a2a2a;
+    --occupied-soft: #5c2b2b;
+    --chip-text: #ffd6d6;
+}
+
+
 body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f8ff; /* Azul muy claro */
-    color: #333;
+    background-color: var(--bg-main);
+    color: var(--text-main);
     line-height: 1.6;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* Banner Hero con Slider */
@@ -46,7 +100,7 @@ body {
 
 .hero-content {
     z-index: 2;
-    background: rgba(0, 123, 255, 0.7); /* Azul mar semi-transparente */
+    background: var(--hero-overlay);
     padding: 20px;
     border-radius: 10px;
 }
@@ -66,7 +120,7 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 206, 209, 0.8); /* Verde agua */
+    background: var(--slider-btn-bg);
     color: white;
     border: none;
     padding: 10px;
@@ -81,24 +135,31 @@ body {
 
 /* Navegación */
 nav {
-    background: #007BFF; /* Azul mar */
+    background: var(--nav-bg);
     padding: 10px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .nav-btn {
-    background: #00CED1; /* Verde agua */
+    background: var(--nav-btn-bg);
     color: white;
     border: none;
     padding: 10px 20px;
-    margin: 0 5px;
+    margin: 0;
     cursor: pointer;
     border-radius: 5px;
     transition: background 0.3s;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 .nav-btn:hover, .nav-btn.active {
-    background: #0056b3; /* Azul mar oscuro */
+    background: var(--nav-btn-active);
 }
 
 /* Secciones */
@@ -120,7 +181,7 @@ nav {
 }
 
 .room-card {
-    background: white;
+    background: var(--card-bg);
     border-radius: 10px;
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -149,7 +210,7 @@ nav {
 }
 
 .btn-primary, .btn-secondary, .btn-danger {
-    background: #007BFF;
+    background: var(--btn-primary-bg);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -157,18 +218,22 @@ nav {
     border-radius: 5px;
     margin: 5px;
     transition: background 0.3s;
+    min-height: 78px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .btn-primary:hover {
-    background: #0056b3;
+    background: var(--btn-primary-hover);
 }
 
 .btn-secondary {
-    background: #00CED1;
+    background: var(--btn-secondary-bg);
 }
 
 .btn-secondary:hover {
-    background: #0097a7;
+    background: var(--btn-secondary-hover);
 }
 
 .btn-danger {
@@ -181,7 +246,7 @@ nav {
 
 /* Formulario */
 .form-container {
-    background: white;
+    background: var(--surface-bg);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -194,15 +259,49 @@ form {
     gap: 10px;
 }
 
+.hidden-room-select {
+    display: none;
+}
+
+.room-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.room-select-btn {
+    border: 1px solid var(--calendar-border);
+    background: var(--surface-bg);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.room-select-btn.active {
+    background: var(--btn-secondary-bg);
+    color: #fff;
+    border-color: transparent;
+}
+
+.selected-room-label {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
 input, select {
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
+    background: var(--input-bg);
+    color: var(--text-main);
 }
 
 /* Calendario */
 #calendar-container {
-    background: white;
+    background: var(--surface-bg);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -224,32 +323,111 @@ input, select {
 .calendar-day {
     padding: 10px;
     text-align: center;
-    border: 1px solid #ddd;
+    border: 1px solid var(--calendar-border);
     cursor: pointer;
     transition: background 0.3s;
+    min-height: 78px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+
+.calendar-header-day {
+    min-height: auto;
+    font-weight: 700;
+    justify-content: center;
 }
 
 .calendar-day.today {
-    background: #00CED1;
+    background: var(--today-bg);
     color: white;
 }
 
 .calendar-day.selected {
-    background: #007BFF;
+    background: var(--selected-bg);
     color: white;
 }
 
 .calendar-day.occupied {
-    background: #dc3545;
-    color: white;
+    background: var(--occupied-soft);
+}
+
+.calendar-date-number {
+    font-weight: 700;
+}
+
+.calendar-room-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+}
+
+.room-chip {
+    font-size: 0.72em;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(220, 53, 69, 0.15);
+    color: var(--chip-text);
+    border: 1px solid rgba(220, 53, 69, 0.4);
 }
 
 .details {
     margin-top: 20px;
-    background: white;
+    background: var(--surface-bg);
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.theme-toggle {
+    margin-left: 0;
+}
+
+
+.room-map {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+    grid-template-areas:
+        'duplex1 duplex2 cobertura cobertura'
+        'pareja1 pareja2 cobertura cobertura'
+        'pareja3 frente1 frente2 cobertura';
+    gap: 12px;
+}
+
+.map-room {
+    border: 2px solid var(--calendar-border);
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--card-bg);
+    text-align: center;
+    font-weight: 600;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.map-room--duplex1 { grid-area: duplex1; }
+.map-room--duplex2 { grid-area: duplex2; }
+.map-room--pareja1 { grid-area: pareja1; }
+.map-room--pareja2 { grid-area: pareja2; }
+.map-room--pareja3 { grid-area: pareja3; }
+.map-room--frente1 { grid-area: frente1; }
+.map-room--frente2 { grid-area: frente2; }
+.map-room--cobertura { grid-area: cobertura; min-height: 100%; }
+
+.map-room.occupied {
+    border-color: #dc3545;
+    background: var(--occupied-soft);
+}
+
+.map-room small {
+    display: block;
+    margin-top: 6px;
+    font-weight: 400;
 }
 
 /* Responsive */
@@ -264,4 +442,82 @@ input, select {
         grid-template-columns: repeat(7, 1fr);
         font-size: 0.8em;
     }
+
+    .room-map {
+        grid-template-columns: repeat(2, minmax(110px, 1fr));
+        grid-template-areas:
+            'duplex1 duplex2'
+            'pareja1 pareja2'
+            'pareja3 frente1'
+            'frente2 cobertura';
+    }
+}
+
+
+
+/* Ajustes de tamaño para sección Habitaciones */
+#rooms-section {
+    font-size: 0.92rem;
+}
+
+#rooms-section h2,
+#rooms-section h3 {
+    margin: 10px 0;
+}
+
+#rooms-section .grid {
+    gap: 14px;
+}
+
+#rooms-section .room-card {
+    padding: 12px;
+}
+
+#rooms-section .room-card h3 {
+    font-size: 1rem;
+}
+
+#rooms-section .room-card p {
+    margin: 3px 0;
+    font-size: 0.88rem;
+}
+
+#rooms-section .form-container {
+    padding: 14px;
+}
+
+#rooms-section form {
+    gap: 8px;
+}
+
+#rooms-section input,
+#rooms-section select,
+#rooms-section button {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+}
+
+/* Pista visual del estado del modo oscuro */
+body.dark-mode #theme-toggle {
+    box-shadow: 0 0 0 2px rgba(182, 139, 252, 0.45);
+}
+
+
+#rooms-section .grid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+#rooms-section .room-card {
+    padding: 10px;
+}
+
+#rooms-section .room-card.selected-room-card {
+    outline: 2px solid var(--btn-secondary-bg);
+    transform: translateY(-2px);
+}
+
+
+#rooms-section #status-date {
+    max-width: 220px;
+    margin: 4px 0 12px;
 }
