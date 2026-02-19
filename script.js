@@ -20,6 +20,8 @@ const reserveForm = document.getElementById('reserve-form');
 const calendarGrid = document.getElementById('calendar-grid');
 const monthYear = document.getElementById('month-year');
 const occupationsList = document.getElementById('occupations-list');
+const roomMap = document.getElementById('room-map');
+const themeToggleBtn = document.getElementById('theme-toggle');
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     populateRoomSelect();
     initCalendar();
     initSlider();
+    initTheme();
 
     // Navegación
     document.getElementById('btn-rooms').addEventListener('click', () => showSection('rooms-section'));
@@ -38,7 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calendario
     document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
     document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
+
+    // Tema
+    themeToggleBtn.addEventListener('click', toggleTheme);
 });
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const nextTheme = isDark ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+}
+
+function applyTheme(theme) {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+    themeToggleBtn.textContent = isDark ? '☀️ Modo claro' : '🌙 Modo oscuro';
+    themeToggleBtn.setAttribute('aria-label', isDark ? 'Activar modo claro' : 'Activar modo oscuro');
+}
 
 // Mostrar sección
 function showSection(sectionId) {
@@ -63,6 +88,12 @@ function loadRooms() {
                 <p><strong>Entrada:</strong> ${reservation.checkin}</p>
                 <p><strong>Salida:</strong> ${reservation.checkout}</p>
                 <p><strong>Huésped:</strong> ${reservation.guest}</p>
+                <p><strong>Personas:</strong> ${reservation.guestCount || 0}</p>
+                <p><strong>Autos:</strong> ${reservation.carCount || 0} (${reservation.carPlates || 'sin patente'})</p>
+                <p><strong>Pago:</strong> ${reservation.paymentStatus || 'Sin estado'}</p>
+                <p><strong>Días extra:</strong> ${reservation.extraDays || 0}</p>
+                <p><strong>Horario:</strong> ${reservation.checkinTime || '--:--'} - ${reservation.checkoutTime || '--:--'}</p>
+                <p><strong>Pagado:</strong> $${reservation.paidAmount || 0} | <strong>Falta:</strong> $${reservation.pendingAmount || 0}</p>
                 <button class="btn-danger" onclick="freeRoom(${room.id})">Liberar</button>
                 <button class="btn-danger" onclick="deleteReservation(${reservation.id})">Eliminar Reserva</button>
             ` : ''}
@@ -85,22 +116,50 @@ function populateRoomSelect() {
 // Manejar reserva
 function handleReservation(e) {
     e.preventDefault();
-    const roomId = parseInt(roomSelect.value);
+    const roomId = parseInt(roomSelect.value, 10);
     const checkin = document.getElementById('checkin-date').value;
     const checkout = document.getElementById('checkout-date').value;
     const guest = document.getElementById('guest-name').value;
+    const guestCount = parseInt(document.getElementById('guest-count').value, 10);
+    const carCount = parseInt(document.getElementById('car-count').value || 0, 10);
+    const carPlates = document.getElementById('car-plates').value.trim();
+    const paymentStatus = document.getElementById('payment-status').value;
+    const extraDays = parseInt(document.getElementById('extra-days').value || 0, 10);
+    const checkinTime = document.getElementById('checkin-time').value;
+    const checkoutTime = document.getElementById('checkout-time').value;
+    const paidAmount = parseFloat(document.getElementById('paid-amount').value || 0);
+    const pendingAmount = parseFloat(document.getElementById('pending-amount').value || 0);
 
     if (new Date(checkin) >= new Date(checkout)) {
         alert('Fecha de salida debe ser posterior a entrada.');
         return;
     }
 
-    const id = Date.now(); // ID simple
-    reservations.push({ id, roomId, checkin, checkout, guest });
+    const id = Date.now();
+    reservations.push({
+        id,
+        roomId,
+        checkin,
+        checkout,
+        guest,
+        guestCount,
+        carCount,
+        carPlates,
+        paymentStatus,
+        extraDays,
+        checkinTime,
+        checkoutTime,
+        paidAmount,
+        pendingAmount
+    });
+
     saveReservations();
     loadRooms();
     reserveForm.reset();
     renderCalendar();
+    if (selectedDate) {
+        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
+    }
 }
 
 // Liberar habitación
@@ -109,6 +168,9 @@ function freeRoom(roomId) {
     saveReservations();
     loadRooms();
     renderCalendar();
+    if (selectedDate) {
+        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
+    }
 }
 
 // Eliminar reserva
@@ -117,6 +179,9 @@ function deleteReservation(id) {
     saveReservations();
     loadRooms();
     renderCalendar();
+    if (selectedDate) {
+        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
+    }
 }
 
 // Verificar si está ocupada (fechas actuales)
@@ -137,7 +202,18 @@ let currentDate = new Date();
 let selectedDate = null;
 
 function initCalendar() {
+    selectedDate = new Date().toISOString().split('T')[0];
     renderCalendar();
+    selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
+}
+
+function getOccupiedRoomsByDate(fullDate) {
+    return reservations.filter(r => {
+        const checkin = new Date(r.checkin);
+        const checkout = new Date(r.checkout);
+        const current = new Date(fullDate);
+        return current >= checkin && current <= checkout;
+    });
 }
 
 function renderCalendar() {
@@ -150,26 +226,27 @@ function renderCalendar() {
 
     calendarGrid.innerHTML = '';
 
-    // Días de la semana
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
     days.forEach(day => {
         const header = document.createElement('div');
-        header.className = 'calendar-day';
+        header.className = 'calendar-day calendar-header-day';
         header.textContent = day;
         calendarGrid.appendChild(header);
     });
 
-    // Días vacíos
     for (let i = 0; i < firstDay; i++) {
         const empty = document.createElement('div');
         calendarGrid.appendChild(empty);
     }
 
-    // Días del mes
     for (let date = 1; date <= lastDate; date++) {
         const dayEl = document.createElement('div');
         dayEl.className = 'calendar-day';
-        dayEl.textContent = date;
+
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'calendar-date-number';
+        dayNumber.textContent = date;
+        dayEl.appendChild(dayNumber);
 
         const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
         const today = new Date().toISOString().split('T')[0];
@@ -182,16 +259,29 @@ function renderCalendar() {
             dayEl.classList.add('selected');
         }
 
-        // Verificar si hay ocupaciones
-        const occupiedRooms = reservations.filter(r => {
-            const checkin = new Date(r.checkin);
-            const checkout = new Date(r.checkout);
-            const current = new Date(fullDate);
-            return current >= checkin && current <= checkout;
-        });
+        const occupiedRooms = getOccupiedRoomsByDate(fullDate);
 
         if (occupiedRooms.length > 0) {
             dayEl.classList.add('occupied');
+            const roomList = document.createElement('div');
+            roomList.className = 'calendar-room-list';
+
+            occupiedRooms.slice(0, 3).forEach(r => {
+                const room = rooms.find(rm => rm.id === r.roomId);
+                const chip = document.createElement('span');
+                chip.className = 'room-chip';
+                chip.textContent = room ? room.name : `Hab ${r.roomId}`;
+                roomList.appendChild(chip);
+            });
+
+            if (occupiedRooms.length > 3) {
+                const chip = document.createElement('span');
+                chip.className = 'room-chip';
+                chip.textContent = `+${occupiedRooms.length - 3}`;
+                roomList.appendChild(chip);
+            }
+
+            dayEl.appendChild(roomList);
         }
 
         dayEl.addEventListener('click', () => selectDate(fullDate, occupiedRooms));
@@ -204,22 +294,42 @@ function changeMonth(direction) {
     renderCalendar();
     selectedDate = null;
     occupationsList.innerHTML = '';
+    renderRoomMap([]);
 }
 
 function selectDate(date, occupiedRooms) {
     selectedDate = date;
     renderCalendar();
     occupationsList.innerHTML = '';
+
     if (occupiedRooms.length === 0) {
         occupationsList.innerHTML = '<li>No hay ocupaciones este día.</li>';
     } else {
         occupiedRooms.forEach(r => {
             const room = rooms.find(rm => rm.id === r.roomId);
             const li = document.createElement('li');
-            li.textContent = `${room.name} - Huésped: ${r.guest}`;
+            li.textContent = `${room.name} | Huésped: ${r.guest} | Personas: ${r.guestCount || 0} | Autos: ${r.carCount || 0} | Patentes: ${r.carPlates || 'N/A'} | ${r.paymentStatus || 'Sin estado'} | Días extra: ${r.extraDays || 0} | Entrada ${r.checkinTime || '--:--'} / Salida ${r.checkoutTime || '--:--'} | Pagado: $${r.paidAmount || 0} | Falta: $${r.pendingAmount || 0}`;
             occupationsList.appendChild(li);
         });
     }
+
+    renderRoomMap(occupiedRooms);
+}
+
+function renderRoomMap(occupiedRooms) {
+    roomMap.innerHTML = '';
+    const occupiedByRoom = new Map(occupiedRooms.map(r => [r.roomId, r]));
+
+    rooms.forEach(room => {
+        const card = document.createElement('div');
+        const reservation = occupiedByRoom.get(room.id);
+        card.className = `map-room ${reservation ? 'occupied' : ''}`;
+        card.innerHTML = `
+            <div>${room.name}</div>
+            <small>${reservation ? `Ocupada por ${reservation.guest}` : 'Disponible'}</small>
+        `;
+        roomMap.appendChild(card);
+    });
 }
 
 function getMonthName(month) {
@@ -235,7 +345,7 @@ function initSlider() {
     document.getElementById('prev-slide').addEventListener('click', () => changeSlide(-1));
     document.getElementById('next-slide').addEventListener('click', () => changeSlide(1));
     showSlide(currentSlide);
-    setInterval(() => changeSlide(1), 5000); // Auto-slide cada 5s
+    setInterval(() => changeSlide(1), 5000);
 }
 
 function changeSlide(direction) {
