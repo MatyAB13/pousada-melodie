@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pousada Melodie - Gestión MVP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Banner Hero con Slider -->
+    <header id="hero">
+        <div class="slider">
+            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200');"></div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200');"></div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200');"></div>
+        </div>
+        <div class="hero-content">
+            <h1>Pousada Melodie</h1>
+            <p>Hotel Boutique Frente al Mar - Brasil</p>
+        </div>
+        <button id="prev-slide" class="slider-btn">&lt;</button>
+        <button id="next-slide" class="slider-btn">&gt;</button>
+    </header>
+
+    <!-- Navegación -->
+    <nav>
+        <button id="btn-rooms" class="nav-btn active">Habitaciones</button>
+        <button id="btn-calendar" class="nav-btn">Calendario</button>
+    </nav>
+
+    <!-- Sección Habitaciones -->
+    <section id="rooms-section" class="section">
+        <h2>Gestión de Habitaciones</h2>
+        <div id="rooms-grid" class="grid"></div>
+        
+        <!-- Formulario de Reserva -->
+        <div id="reservation-form" class="form-container">
+            <h3>Registrar Reserva</h3>
+            <form id="reserve-form">
+                <select id="room-select" required>
+                    <option value="">Seleccionar Habitación</option>
+                </select>
+                <input type="date" id="checkin-date" required>
+                <input type="date" id="checkout-date" required>
+                <input type="text" id="guest-name" placeholder="Nombre del Huésped" required>
+                <button type="submit" class="btn-primary">Reservar</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Sección Calendario -->
+    <section id="calendar-section" class="section hidden">
+        <h2>Vista Calendario</h2>
+        <div id="calendar-container">
+            <div id="calendar-header">
+                <button id="prev-month" class="btn-secondary">&lt; Mes Anterior</button>
+                <h3 id="month-year"></h3>
+                <button id="next-month" class="btn-secondary">Mes Siguiente &gt;</button>
+            </div>
+            <div id="calendar-grid"></div>
+        </div>
+        <div id="calendar-details" class="details">
+            <h3>Ocupaciones del Día Seleccionado</h3>
+            <ul id="occupations-list"></ul>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
