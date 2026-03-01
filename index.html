@@ -1,90 +1,42 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pousada Melodie - Gestión MVP</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Natura 3D Store</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Banner Hero con Slider -->
-    <header id="hero">
-        <div class="slider">
-            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200');"></div>
-            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200');"></div>
-            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200');"></div>
-        </div>
-        <div class="hero-content">
-            <h1>Pousada Melodie</h1>
-            <p>Hotel Boutique Frente al Mar - Brasil</p>
-        </div>
-        <button id="prev-slide" class="slider-btn">&lt;</button>
-        <button id="next-slide" class="slider-btn">&gt;</button>
+  <div class="page">
+    <header class="topbar">
+      <div>
+        <p class="badge">Cosmética consciente</p>
+        <h1>Tienda 3D Natura</h1>
+        <p class="subtitle">Explora productos en 3D, gira la cámara y agrega tus favoritos al carrito.</p>
+      </div>
+      <button id="toggle-spin" class="btn">Pausar rotación</button>
     </header>
 
-    <!-- Navegación -->
-    <nav>
-        <button id="btn-rooms" class="nav-btn active">Habitaciones</button>
-        <button id="btn-calendar" class="nav-btn">Calendario</button>
-        <button id="theme-toggle" class="nav-btn theme-toggle" aria-label="Activar modo oscuro">🌙 Modo oscuro</button>
-    </nav>
+    <main class="layout">
+      <section class="viewer-panel">
+        <canvas id="scene" aria-label="Vista 3D de productos Natura"></canvas>
+        <p class="hint">Arrastra para rotar · Rueda para zoom · Click en un producto para seleccionarlo</p>
+      </section>
 
-    <!-- Sección Habitaciones -->
-    <section id="rooms-section" class="section">
-        <h2>Gestión de Habitaciones</h2>
-        <div id="rooms-grid" class="grid"></div>
-        
-        <!-- Formulario de Reserva -->
-        <div id="reservation-form" class="form-container">
-            <h3>Registrar Reserva</h3>
-            <form id="reserve-form">
-                <select id="room-select" required>
-                    <option value="">Seleccionar Habitación</option>
-                </select>
-                <input type="date" id="checkin-date" required>
-                <input type="date" id="checkout-date" required>
-                <input type="text" id="guest-name" placeholder="Nombre del Huésped" required>
-                <input type="number" id="guest-count" min="1" placeholder="Cuántas personas" required>
-                <input type="number" id="car-count" min="0" placeholder="Cuántos autos" value="0">
-                <input type="text" id="car-plates" placeholder="Patentes (separadas por coma)">
-                <select id="payment-status" required>
-                    <option value="">Pagado o falta pagar</option>
-                    <option value="Pagado">Pagado</option>
-                    <option value="Falta pagar">Falta pagar</option>
-                </select>
-                <input type="number" id="extra-days" min="0" placeholder="Si se quedan más días, cuántos" value="0">
-                <label for="checkin-time">Hora de entrada</label>
-                <input type="time" id="checkin-time" required>
-                <label for="checkout-time">Hora de salida</label>
-                <input type="time" id="checkout-time" required>
-                <input type="number" id="paid-amount" min="0" step="0.01" placeholder="Cuánto dinero pagó de entrada" value="0">
-                <input type="number" id="pending-amount" min="0" step="0.01" placeholder="Cuánto falta pagar" value="0">
-                <button type="submit" class="btn-primary">Reservar</button>
-            </form>
-        </div>
-    </section>
+      <aside class="side-panel">
+        <h2>Catálogo Natura</h2>
+        <ul id="product-list" class="product-list"></ul>
 
-    <!-- Sección Calendario -->
-    <section id="calendar-section" class="section hidden">
-        <h2>Vista Calendario</h2>
-        <div id="calendar-container">
-            <div id="calendar-header">
-                <button id="prev-month" class="btn-secondary">&lt; Mes Anterior</button>
-                <h3 id="month-year"></h3>
-                <button id="next-month" class="btn-secondary">Mes Siguiente &gt;</button>
-            </div>
-            <div id="calendar-grid"></div>
-            <div id="calendar-map" class="details">
-                <h3>Croquis de habitaciones (día seleccionado)</h3>
-                <div id="room-map" class="room-map"></div>
-            </div>
+        <div class="cart">
+          <h3>Carrito</h3>
+          <ul id="cart-list"></ul>
+          <p id="cart-total">Total: $0</p>
+          <button id="checkout" class="btn btn-primary">Finalizar compra</button>
         </div>
-        <div id="calendar-details" class="details">
-            <h3>Ocupaciones del Día Seleccionado</h3>
-            <ul id="occupations-list"></ul>
-        </div>
-    </section>
+      </aside>
+    </main>
+  </div>
 
-    <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

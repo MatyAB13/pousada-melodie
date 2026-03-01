@@ -1,360 +1,198 @@
-// Datos de habitaciones fijas
-const rooms = [
-    { id: 1, name: 'Dúplex 1', type: 'Dúplex' },
-    { id: 2, name: 'Dúplex 2', type: 'Dúplex' },
-    { id: 3, name: 'Pareja 1', type: 'Habitación de Pareja' },
-    { id: 4, name: 'Pareja 2', type: 'Habitación de Pareja' },
-    { id: 5, name: 'Pareja 3', type: 'Habitación de Pareja' },
-    { id: 6, name: 'Frente al Mar 1', type: 'Habitación Frente al Mar' },
-    { id: 7, name: 'Frente al Mar 2', type: 'Habitación Frente al Mar' },
-    { id: 8, name: 'Cobertura', type: 'Cobertura' }
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/controls/OrbitControls.js';
+
+const products = [
+  { id: 'ekos-castanha', name: 'Ekos Castanha', price: 42, color: 0xd97706, shape: 'cylinder' },
+  { id: 'tododia-ceramidas', name: 'Tododia Ceramidas', price: 36, color: 0xf59e0b, shape: 'box' },
+  { id: 'lumina-shampoo', name: 'Lumina Shampoo', price: 54, color: 0x60a5fa, shape: 'cylinder' },
+  { id: 'mamãe-bebê-oleo', name: 'Mamãe e Bebê Óleo', price: 48, color: 0x34d399, shape: 'box' },
+  { id: 'kaiak-feminino', name: 'Kaiak Feminino', price: 79, color: 0x22d3ee, shape: 'box' }
 ];
 
-// Cargar datos desde LocalStorage
-let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+const canvas = document.getElementById('scene');
+const productList = document.getElementById('product-list');
+const cartList = document.getElementById('cart-list');
+const cartTotal = document.getElementById('cart-total');
+const toggleSpin = document.getElementById('toggle-spin');
+const checkoutButton = document.getElementById('checkout');
 
-// Elementos DOM
-const roomsGrid = document.getElementById('rooms-grid');
-const roomSelect = document.getElementById('room-select');
-const reserveForm = document.getElementById('reserve-form');
-const calendarGrid = document.getElementById('calendar-grid');
-const monthYear = document.getElementById('month-year');
-const occupationsList = document.getElementById('occupations-list');
-const roomMap = document.getElementById('room-map');
-const themeToggleBtn = document.getElementById('theme-toggle');
+const cart = [];
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 2, 0.1, 100);
+camera.position.set(0, 3.4, 8.5);
 
-// Inicializar
-document.addEventListener('DOMContentLoaded', () => {
-    loadRooms();
-    populateRoomSelect();
-    initCalendar();
-    initSlider();
-    initTheme();
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Navegación
-    document.getElementById('btn-rooms').addEventListener('click', () => showSection('rooms-section'));
-    document.getElementById('btn-calendar').addEventListener('click', () => showSection('calendar-section'));
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.minDistance = 4;
+controls.maxDistance = 14;
 
-    // Formulario
-    reserveForm.addEventListener('submit', handleReservation);
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+keyLight.position.set(5, 8, 4);
+scene.add(keyLight);
 
-    // Calendario
-    document.getElementById('prev-month').addEventListener('click', () => changeMonth(-1));
-    document.getElementById('next-month').addEventListener('click', () => changeMonth(1));
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(7.5, 64),
+  new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -1.1;
+scene.add(floor);
 
-    // Tema
-    themeToggleBtn.addEventListener('click', toggleTheme);
+const ring = new THREE.Group();
+scene.add(ring);
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let autoSpin = true;
+let selectedMesh = null;
+
+function createProductMesh(product, index) {
+  const geometry = product.shape === 'cylinder'
+    ? new THREE.CylinderGeometry(0.55, 0.65, 1.8, 32)
+    : new THREE.BoxGeometry(1.1, 1.7, 0.8);
+
+  const mesh = new THREE.Mesh(
+    geometry,
+    new THREE.MeshStandardMaterial({
+      color: product.color,
+      metalness: 0.22,
+      roughness: 0.35
+    })
+  );
+
+  const radius = 3.1;
+  const angle = (index / products.length) * Math.PI * 2;
+  mesh.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+  mesh.lookAt(0, 0, 0);
+  mesh.userData = { product };
+
+  const label = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: makeLabelTexture(product.name), transparent: true })
+  );
+  label.scale.set(2.2, 0.48, 1);
+  label.position.y = 1.5;
+  mesh.add(label);
+
+  ring.add(mesh);
+}
+
+function makeLabelTexture(text) {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 120;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(15,23,42,0.7)';
+  ctx.roundRect(0, 0, c.width, c.height, 32);
+  ctx.fill();
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '700 44px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, c.width / 2, c.height / 2);
+
+  return new THREE.CanvasTexture(c);
+}
+
+function renderProductList() {
+  productList.innerHTML = '';
+  products.forEach(product => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span>${product.name}<br><small>$${product.price}</small></span>
+      <button class="btn">Agregar</button>
+    `;
+    li.querySelector('button').addEventListener('click', () => addToCart(product));
+    productList.appendChild(li);
+  });
+}
+
+function addToCart(product) {
+  cart.push(product);
+  renderCart();
+}
+
+function renderCart() {
+  cartList.innerHTML = '';
+  if (!cart.length) {
+    cartList.innerHTML = '<li>Tu carrito está vacío</li>';
+  }
+
+  cart.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = `${item.name} · $${item.price}`;
+    cartList.appendChild(li);
+  });
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  cartTotal.textContent = `Total: $${total}`;
+}
+
+function resizeRenderer() {
+  const { clientWidth, clientHeight } = canvas;
+  if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
+    renderer.setSize(clientWidth, clientHeight, false);
+    camera.aspect = clientWidth / clientHeight;
+    camera.updateProjectionMatrix();
+  }
+}
+
+function onPointerDown(event) {
+  const rect = canvas.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObjects(ring.children, true);
+
+  if (!intersects.length) return;
+
+  const objectWithProduct = intersects
+    .map(hit => hit.object)
+    .find(obj => obj.userData.product || obj.parent?.userData.product);
+
+  const selected = objectWithProduct.userData.product ? objectWithProduct : objectWithProduct.parent;
+  const product = selected.userData.product;
+
+  if (selectedMesh && selectedMesh.material?.emissive) {
+    selectedMesh.material.emissive.setHex(0x000000);
+  }
+  selected.material.emissive = new THREE.Color(0x1e293b);
+  selectedMesh = selected;
+
+  addToCart(product);
+}
+
+function animate() {
+  resizeRenderer();
+  if (autoSpin) ring.rotation.y += 0.004;
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+products.forEach(createProductMesh);
+renderProductList();
+renderCart();
+animate();
+
+canvas.addEventListener('pointerdown', onPointerDown);
+
+toggleSpin.addEventListener('click', () => {
+  autoSpin = !autoSpin;
+  toggleSpin.textContent = autoSpin ? 'Pausar rotación' : 'Reanudar rotación';
 });
 
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
-}
+checkoutButton.addEventListener('click', () => {
+  if (!cart.length) {
+    alert('Agrega al menos un producto antes de finalizar.');
+    return;
+  }
 
-function toggleTheme() {
-    const isDark = document.body.classList.contains('dark-mode');
-    const nextTheme = isDark ? 'light' : 'dark';
-    applyTheme(nextTheme);
-    localStorage.setItem('theme', nextTheme);
-}
-
-function applyTheme(theme) {
-    const isDark = theme === 'dark';
-    document.body.classList.toggle('dark-mode', isDark);
-    themeToggleBtn.textContent = isDark ? '☀️ Modo claro' : '🌙 Modo oscuro';
-    themeToggleBtn.setAttribute('aria-label', isDark ? 'Activar modo claro' : 'Activar modo oscuro');
-}
-
-// Mostrar sección
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(sectionId).classList.remove('hidden');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-' + sectionId.split('-')[0]).classList.add('active');
-}
-
-// Cargar habitaciones en grid
-function loadRooms() {
-    roomsGrid.innerHTML = '';
-    rooms.forEach(room => {
-        const reservation = reservations.find(r => r.roomId === room.id && isOccupied(r));
-        const card = document.createElement('div');
-        card.className = `room-card ${reservation ? 'occupied' : 'free'}`;
-        card.innerHTML = `
-            <h3>${room.name}</h3>
-            <p><strong>Tipo:</strong> ${room.type}</p>
-            <p><strong>Estado:</strong> ${reservation ? 'Ocupada' : 'Libre'}</p>
-            ${reservation ? `
-                <p><strong>Entrada:</strong> ${reservation.checkin}</p>
-                <p><strong>Salida:</strong> ${reservation.checkout}</p>
-                <p><strong>Huésped:</strong> ${reservation.guest}</p>
-                <p><strong>Personas:</strong> ${reservation.guestCount || 0}</p>
-                <p><strong>Autos:</strong> ${reservation.carCount || 0} (${reservation.carPlates || 'sin patente'})</p>
-                <p><strong>Pago:</strong> ${reservation.paymentStatus || 'Sin estado'}</p>
-                <p><strong>Días extra:</strong> ${reservation.extraDays || 0}</p>
-                <p><strong>Horario:</strong> ${reservation.checkinTime || '--:--'} - ${reservation.checkoutTime || '--:--'}</p>
-                <p><strong>Pagado:</strong> $${reservation.paidAmount || 0} | <strong>Falta:</strong> $${reservation.pendingAmount || 0}</p>
-                <button class="btn-danger" onclick="freeRoom(${room.id})">Liberar</button>
-                <button class="btn-danger" onclick="deleteReservation(${reservation.id})">Eliminar Reserva</button>
-            ` : ''}
-        `;
-        roomsGrid.appendChild(card);
-    });
-}
-
-// Poblar select de habitaciones
-function populateRoomSelect() {
-    roomSelect.innerHTML = '<option value="">Seleccionar Habitación</option>';
-    rooms.forEach(room => {
-        const option = document.createElement('option');
-        option.value = room.id;
-        option.textContent = room.name;
-        roomSelect.appendChild(option);
-    });
-}
-
-// Manejar reserva
-function handleReservation(e) {
-    e.preventDefault();
-    const roomId = parseInt(roomSelect.value, 10);
-    const checkin = document.getElementById('checkin-date').value;
-    const checkout = document.getElementById('checkout-date').value;
-    const guest = document.getElementById('guest-name').value;
-    const guestCount = parseInt(document.getElementById('guest-count').value, 10);
-    const carCount = parseInt(document.getElementById('car-count').value || 0, 10);
-    const carPlates = document.getElementById('car-plates').value.trim();
-    const paymentStatus = document.getElementById('payment-status').value;
-    const extraDays = parseInt(document.getElementById('extra-days').value || 0, 10);
-    const checkinTime = document.getElementById('checkin-time').value;
-    const checkoutTime = document.getElementById('checkout-time').value;
-    const paidAmount = parseFloat(document.getElementById('paid-amount').value || 0);
-    const pendingAmount = parseFloat(document.getElementById('pending-amount').value || 0);
-
-    if (new Date(checkin) >= new Date(checkout)) {
-        alert('Fecha de salida debe ser posterior a entrada.');
-        return;
-    }
-
-    const id = Date.now();
-    reservations.push({
-        id,
-        roomId,
-        checkin,
-        checkout,
-        guest,
-        guestCount,
-        carCount,
-        carPlates,
-        paymentStatus,
-        extraDays,
-        checkinTime,
-        checkoutTime,
-        paidAmount,
-        pendingAmount
-    });
-
-    saveReservations();
-    loadRooms();
-    reserveForm.reset();
-    renderCalendar();
-    if (selectedDate) {
-        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
-    }
-}
-
-// Liberar habitación
-function freeRoom(roomId) {
-    reservations = reservations.filter(r => !(r.roomId === roomId && isOccupied(r)));
-    saveReservations();
-    loadRooms();
-    renderCalendar();
-    if (selectedDate) {
-        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
-    }
-}
-
-// Eliminar reserva
-function deleteReservation(id) {
-    reservations = reservations.filter(r => r.id !== id);
-    saveReservations();
-    loadRooms();
-    renderCalendar();
-    if (selectedDate) {
-        selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
-    }
-}
-
-// Verificar si está ocupada (fechas actuales)
-function isOccupied(reservation) {
-    const now = new Date();
-    const checkin = new Date(reservation.checkin);
-    const checkout = new Date(reservation.checkout);
-    return now >= checkin && now <= checkout;
-}
-
-// Guardar en LocalStorage
-function saveReservations() {
-    localStorage.setItem('reservations', JSON.stringify(reservations));
-}
-
-// Calendario
-let currentDate = new Date();
-let selectedDate = null;
-
-function initCalendar() {
-    selectedDate = new Date().toISOString().split('T')[0];
-    renderCalendar();
-    selectDate(selectedDate, getOccupiedRoomsByDate(selectedDate));
-}
-
-function getOccupiedRoomsByDate(fullDate) {
-    return reservations.filter(r => {
-        const checkin = new Date(r.checkin);
-        const checkout = new Date(r.checkout);
-        const current = new Date(fullDate);
-        return current >= checkin && current <= checkout;
-    });
-}
-
-function renderCalendar() {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    monthYear.textContent = `${getMonthName(month)} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
-
-    calendarGrid.innerHTML = '';
-
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    days.forEach(day => {
-        const header = document.createElement('div');
-        header.className = 'calendar-day calendar-header-day';
-        header.textContent = day;
-        calendarGrid.appendChild(header);
-    });
-
-    for (let i = 0; i < firstDay; i++) {
-        const empty = document.createElement('div');
-        calendarGrid.appendChild(empty);
-    }
-
-    for (let date = 1; date <= lastDate; date++) {
-        const dayEl = document.createElement('div');
-        dayEl.className = 'calendar-day';
-
-        const dayNumber = document.createElement('div');
-        dayNumber.className = 'calendar-date-number';
-        dayNumber.textContent = date;
-        dayEl.appendChild(dayNumber);
-
-        const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-        const today = new Date().toISOString().split('T')[0];
-
-        if (fullDate === today) {
-            dayEl.classList.add('today');
-        }
-
-        if (selectedDate === fullDate) {
-            dayEl.classList.add('selected');
-        }
-
-        const occupiedRooms = getOccupiedRoomsByDate(fullDate);
-
-        if (occupiedRooms.length > 0) {
-            dayEl.classList.add('occupied');
-            const roomList = document.createElement('div');
-            roomList.className = 'calendar-room-list';
-
-            occupiedRooms.slice(0, 3).forEach(r => {
-                const room = rooms.find(rm => rm.id === r.roomId);
-                const chip = document.createElement('span');
-                chip.className = 'room-chip';
-                chip.textContent = room ? room.name : `Hab ${r.roomId}`;
-                roomList.appendChild(chip);
-            });
-
-            if (occupiedRooms.length > 3) {
-                const chip = document.createElement('span');
-                chip.className = 'room-chip';
-                chip.textContent = `+${occupiedRooms.length - 3}`;
-                roomList.appendChild(chip);
-            }
-
-            dayEl.appendChild(roomList);
-        }
-
-        dayEl.addEventListener('click', () => selectDate(fullDate, occupiedRooms));
-        calendarGrid.appendChild(dayEl);
-    }
-}
-
-function changeMonth(direction) {
-    currentDate.setMonth(currentDate.getMonth() + direction);
-    renderCalendar();
-    selectedDate = null;
-    occupationsList.innerHTML = '';
-    renderRoomMap([]);
-}
-
-function selectDate(date, occupiedRooms) {
-    selectedDate = date;
-    renderCalendar();
-    occupationsList.innerHTML = '';
-
-    if (occupiedRooms.length === 0) {
-        occupationsList.innerHTML = '<li>No hay ocupaciones este día.</li>';
-    } else {
-        occupiedRooms.forEach(r => {
-            const room = rooms.find(rm => rm.id === r.roomId);
-            const li = document.createElement('li');
-            li.textContent = `${room.name} | Huésped: ${r.guest} | Personas: ${r.guestCount || 0} | Autos: ${r.carCount || 0} | Patentes: ${r.carPlates || 'N/A'} | ${r.paymentStatus || 'Sin estado'} | Días extra: ${r.extraDays || 0} | Entrada ${r.checkinTime || '--:--'} / Salida ${r.checkoutTime || '--:--'} | Pagado: $${r.paidAmount || 0} | Falta: $${r.pendingAmount || 0}`;
-            occupationsList.appendChild(li);
-        });
-    }
-
-    renderRoomMap(occupiedRooms);
-}
-
-function renderRoomMap(occupiedRooms) {
-    roomMap.innerHTML = '';
-    const occupiedByRoom = new Map(occupiedRooms.map(r => [r.roomId, r]));
-
-    rooms.forEach(room => {
-        const card = document.createElement('div');
-        const reservation = occupiedByRoom.get(room.id);
-        card.className = `map-room ${reservation ? 'occupied' : ''}`;
-        card.innerHTML = `
-            <div>${room.name}</div>
-            <small>${reservation ? `Ocupada por ${reservation.guest}` : 'Disponible'}</small>
-        `;
-        roomMap.appendChild(card);
-    });
-}
-
-function getMonthName(month) {
-    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return months[month];
-}
-
-// Slider del banner
-let currentSlide = 0;
-const slides = document.querySelectorAll('.slide');
-
-function initSlider() {
-    document.getElementById('prev-slide').addEventListener('click', () => changeSlide(-1));
-    document.getElementById('next-slide').addEventListener('click', () => changeSlide(1));
-    showSlide(currentSlide);
-    setInterval(() => changeSlide(1), 5000);
-}
-
-function changeSlide(direction) {
-    currentSlide = (currentSlide + direction + slides.length) % slides.length;
-    showSlide(currentSlide);
-}
-
-function showSlide(index) {
-    slides.forEach((slide, i) => {
-        slide.classList.toggle('active', i === index);
-    });
-}
+  alert(`¡Compra realizada! Total de ${cart.length} productos.`);
+  cart.length = 0;
+  renderCart();
+});
